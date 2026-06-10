@@ -1,0 +1,30 @@
+<mvc:View controllerName="testbooks.controller.Books"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+    <Page id="page" title="{i18n>title}">
+        <Table
+            id="table"
+            items="{/Books}">
+            <columns>
+                <Column>
+                    <Text text="{i18n>title}" />
+                </Column>
+                <Column>
+                    <Text text="{i18n>author}" />
+                </Column>
+                <Column>
+                    <Text text="{i18n>price}" />
+                </Column>
+            </columns>
+            <items>
+                <ColumnListItem>
+                    <cells>
+                        <Text text="{title}" />
+                        <Text text="{author/name}" />
+                        <Text text="{price}" />
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+    </Page>
+</mvc:View>
