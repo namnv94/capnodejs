@@ -9,13 +9,55 @@ pr: none
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '20.x'
-  displayName: 'Install Node.js'
-
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+stages:
+- stage: SecretScanning
+  displayName: 'Secret Scanning'
+  jobs:
+  - job: SecretScanningJob1
+    displayName: 'Secret Scanning Job1'
+    steps:
+    - script: |
+        echo "Running SecretScanningStep1..."
+      displayName: 'SecretScanningStep1'
+- stage: SAST
+  displayName: 'Static Application Security Test - SAST'
+  jobs:
+  - job: sonarqube
+    displayName: 'Sonarqube'
+    steps:
+    - script: |
+        echo "Running SonarqubeStep1..."
+      displayName: 'SonarqubeStep1'
+- stage: DAST
+  displayName: 'Dynamic Application Security Test - DAST'
+  jobs:
+  - job: OWASPNettacker
+    displayName: 'OWASP Nettacker'
+    steps:
+    - script: |
+        echo "Running OWASPNettackerStep1..."
+      displayName: 'OWASPNettackerStep1'
+  - job: ZEDAttackProxy
+    displayName: 'ZED Attack Proxy'
+    steps:
+    - script: |
+        echo "Running ZEDAttackProxyStep1..."
+      displayName: 'ZEDAttackProxyStep1'
+- stage: SCA
+  displayName: 'Software Composition Analysis - SCA'
+  jobs:
+  - job: RetireJS
+    displayName: 'RetireJS'
+    steps:
+    - script: |
+        echo "Running RetireJSStep1..."
+      displayName: 'RetireJSStep1'
+- stage: Deploy
+  displayName: 'Deploy'
+  jobs:
+  - job: DeployJob
+    displayName: 'DeployJob'
+    steps:
+    - script: |
+        echo "Running DeployStep1..."
+      displayName: 'DeployStep1'
