@@ -7,11 +7,11 @@
   "private": true,
   "dependencies": {
     "@sap/cds": "^8",
-    "express": "^4"
+    "express": "^4",
+    "@cap-js/sqlite": "^1"
   },
   "devDependencies": {
     "@cap-js/cds-types": "^0.8.0",
-    "@cap-js/sqlite": "^1",
     "@sap/cds-dk": "^8",
     "cds-plugin-ui5": "^0.13.0",
     "rimraf": "^5.0.5",
@@ -31,7 +31,15 @@
   "cds": {
     "requires": {
       "html5-repo": true,
-      "application-logging": true
+      "application-logging": true,
+      "auth": "dummy",
+      "db": {
+        "kind": "sqlite",
+        "impl": "@cap-js/sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      }
     }
   },
   "workspaces": [
