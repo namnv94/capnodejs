@@ -4,7 +4,10 @@
     <Page id="page" title="{i18n>title}">
         <Table
             id="table"
-            items="{/Books}">
+            items="{/Books}"
+            mode="SingleSelectMaster"
+            selectionChange=".onSelectionChange"
+        >
             <columns>
                 <Column>
                     <Text text="{i18n>title}" />
@@ -21,7 +24,7 @@
                     <cells>
                         <Text text="{title}" />
                         <Text text="{author/name}" />
-                        <Text text="{price}" />
+                        <Text text="{path: 'price', formatter: '.formatter.formatPrice'}" />
                     </cells>
                 </ColumnListItem>
             </items>
