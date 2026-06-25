@@ -18,7 +18,7 @@
     "mbt": "^1.2.49"
   },
   "scripts": {
-    "start": "cds-serve",
+    "start": "cds deploy --to sqlite && cds-serve",
     "watch-testbooks": "cds watch --open testbooks/index.html?sap-ui-xx-viewCache=false --livereload false",
     "undeploy": "cf undeploy capnodejs --delete-services --delete-service-keys --delete-service-brokers",
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
