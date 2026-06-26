@@ -35,14 +35,14 @@
     "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
     "lint": "npm run eslint && npm run ui5lint && npm run cdslint",
     "fix": "npm run eslint:fix &&  && npm run ui5lint:fix && npm run cdslint:fix && npm run format",
-    "eslint": "eslint",
-    "eslint:fix": "eslint --fix",
-    "ui5lint": "cd app/testbooks && ui5lint --details",
-    "ui5lint:fix": "cd app/testbooks && ui5lint --fix",
-    "cdslint": "cds lint db srv",
-    "cdslint:fix": "cds lint db srv --fix",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "eslint": "npx eslint",
+    "eslint:fix": "npx eslint --fix",
+    "ui5lint": "for dir in app/*; do if [ -f \"$dir/ui5/yaml\" ]; then (cd \"$dir\" && npx ui5lint); fi; done",
+    "ui5lint:fix": "cd app/testbooks && npx ui5lint --fix",
+    "cdslint": "npx cds lint db srv",
+    "cdslint:fix": "npx cds lint db srv --fix",
+    "format": "npx prettier . --write",
+    "format:check": "npx prettier . --check"
   },
   "sapux": [
     "app/admin-books",
