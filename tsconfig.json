@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    "lib": ["ES2022"],
+
+    "strict": true,
+
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    "resolveJsonModule": true,
+
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    "sourceMap": true,
+
+    "outDir": "./gen/srv",
+
+    "types": ["node"]
+  },
+
+  "include": [
+    "srv/**/*.ts",
+    "db/**/*.ts",
+    "test/**/*.ts"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "gen",
+    "dist",
+    "coverage"
+  ]
+}

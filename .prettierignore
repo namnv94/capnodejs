@@ -1,0 +1,15 @@
+node_modules/
+dist/
+gen/
+coverage/
+.resources/
+.mta_archives/
+*.log
+
+# UI5 build artifacts
+app/**/node_modules/**
+app/**/dist/
+app/**/webapp/test-resources/
+
+# CAP generated files
+_gen/

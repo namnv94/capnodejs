@@ -6,25 +6,45 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
-    "@sap/cds": "^8",
-    "express": "^4",
-    "@cap-js/sqlite": "^1"
+    "@cap-js/sqlite": "^2.4.0",
+    "@sap/cds": "^9.9.1",
+    "express": "^4"
   },
   "devDependencies": {
-    "@cap-js/cds-types": "^0.8.0",
-    "@sap/cds-dk": "^8",
-    "cds-plugin-ui5": "^0.13.0",
-    "rimraf": "^5.0.5",
-    "mbt": "^1.2.49",
+    "@cap-js/cds-types": "^0.18.0",
+    "@eslint/js": "^10.0.1",
+    "@prettier/plugin-xml": "^3.4.2",
+    "@sap-ux/eslint-plugin-fiori-tools": "^10.6.5",
+    "@sap/cds-dk": "^9.9.2",
     "@sap/eslint-plugin-cds": "^4",
-    "eslint": "^10"
+    "@typescript-eslint/eslint-plugin": "^8.62.0",
+    "@typescript-eslint/parser": "^8.62.0",
+    "@ui5/linter": "^1.23.1",
+    "cds-plugin-ui5": "^0.13.0",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.7.0",
+    "mbt": "^1.2.49",
+    "prettier": "^3.8.4",
+    "rimraf": "^5.0.5"
   },
   "scripts": {
     "start": "cds deploy --to sqlite && cds-serve",
     "watch-testbooks": "cds watch --open testbooks/index.html?sap-ui-xx-viewCache=false --livereload false",
     "undeploy": "cf undeploy capnodejs --delete-services --delete-service-keys --delete-service-brokers",
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
-    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
+    "lint": "npm run lint:eslint && npm run lint:ui5lint",
+    "fix": "npm run lint:eslint:fix && npm run format",
+    "lint:eslint": "eslint",
+    "lint:eslint:fix": "eslint --fix",
+    "lint:ui5lint": "cd app/testbooks && ui5lint --details",
+    "lint:ui5lint:fix": "cd app/testbooks && ui5lint --fix",
+    "lint:cds": "cds lint db srv",
+    "lint:cds:fix": "cds lint db srv --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "sapux": [
     "app/admin-books",
