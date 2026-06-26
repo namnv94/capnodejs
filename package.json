@@ -36,7 +36,7 @@
     "build": "rimraf resources mta_archives && mbt build --mtar archive",
     "deploy": "cf deploy mta_archives/archive.mtar --retries 1",
     "lint": "npm run eslint && npm run ui5lint && npm run cdslint",
-    "fix": "npm run eslint:fix &&  && npm run ui5lint:fix && npm run cdslint:fix && npm run format",
+    "fix": "npm run eslint:fix && npm run ui5lint:fix && npm run cdslint:fix && npm run format",
     "eslint": "npx eslint",
     "eslint:fix": "npx eslint --fix",
     "ui5lint": "cd app/testbooks && npx ui5lint --details",
