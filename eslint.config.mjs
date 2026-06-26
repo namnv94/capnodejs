@@ -5,6 +5,7 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 import fioriTools from '@sap-ux/eslint-plugin-fiori-tools';
 import cds from '@sap/cds/eslint.config.mjs';
 import cdsPlugin from '@sap/eslint-plugin-cds';
+import prettierConfig from "eslint-config-prettier";
 
 export default [
   // Ignore generated folders
@@ -88,5 +89,7 @@ export default [
 
   ...cds.recommended,
   cdsPlugin.configs.recommended,
-  ...fioriTools.configs.recommended
+  ...fioriTools.configs.recommended,
+  // Disable ESLint rules conflicting with Prettier
+  prettierConfig
 ];
