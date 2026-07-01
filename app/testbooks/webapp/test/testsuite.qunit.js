@@ -30,7 +30,7 @@ sap.ui.define(() => {
       }
     },
     tests: {
-      "unit/allTests": {
+      "unit/unitTests": {
         title: "Unit tests"
       },
       "integration/opaTests": {
