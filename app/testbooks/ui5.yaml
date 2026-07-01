@@ -26,6 +26,12 @@ server:
       configuration:
         flp:
           theme: sap_horizon
+    - name: "@ui5/middleware-code-coverage"
+      afterMiddleware: compression
+      configuration:
+        excludePatterns:
+          - "resources/"
+          - "test/"
 resources:
   configuration:
     propertiesFileSourceEncoding: UTF-8
