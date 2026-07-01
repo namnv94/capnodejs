@@ -12,8 +12,7 @@ sap.ui.define([
   ) {
     "use strict";
 
-    const sViewName = "<NAMESPACE_WITH_DOT>.view.Books",
-      sTableId = "mytable";
+    const sViewName = "testbooks.view.Books", sTableId = "mytable";
 
     Opa5.createPageObjects({
       onThePage: {
