@@ -4,9 +4,9 @@ sap.ui.define([
 ], function (opaTest) {
   "use strict";
 
-  QUnit.module("onSelectionChange");
+  QUnit.module("Books");
 
-  opaTest("Should see MessageToast", function (Given, When, Then) {
+  opaTest("onSelectionChange - Should see MessageToast", function (Given, When, Then) {
     // Arrangements
     Given.iStartMyApp();
 
