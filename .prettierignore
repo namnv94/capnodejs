@@ -8,8 +8,10 @@ coverage/
 
 # UI5 build artifacts
 app/**/node_modules/**
+app/**/tmp/
 app/**/dist/
 app/**/webapp/test-resources/
+app/**/webapp/test/
 
 # CAP generated files
 _gen/
