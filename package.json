@@ -29,7 +29,8 @@
     "mbt": "^1.2.49",
     "prettier": "^3.8.4",
     "rimraf": "^5.0.5",
-    "wait-on": "^9.0.10"
+    "wait-on": "^9.0.10",
+    "@cap-js/cds-test": "^1"
   },
   "scripts": {
     "start": "cds deploy --to sqlite && cds-serve",
@@ -47,7 +48,9 @@
     "cdslint:fix": "npx cds lint db srv --fix",
     "format": "npx prettier . --write",
     "format:check": "npx prettier . --check",
-    "test:testbooks": "concurrently -k -n \"CAP,UI5\" -c \"blue,cyan\" \"npx cds-serve\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\""
+    "test": "npm run test:cds && npm run test:testbooks",
+    "test:testbooks": "concurrently -k -n \"CAP,UI5\" -c \"blue,cyan\" \"npx cds-serve\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\"",
+    "test:cds": "npx cds test"
   },
   "sapux": [
     "app/admin-books",
