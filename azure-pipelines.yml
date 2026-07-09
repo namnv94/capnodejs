@@ -21,7 +21,7 @@ variables:
   - name: SMOKE_PATHS
     value: '/,/health'              # comma-separated list used by the IAST stage
   - name: RUN_IAST
-    value: 'true'                   # set to false if you do not have Contrast yet
+    value: 'false'                   # set to false if you do not have Contrast yet
 
 stages:
   - stage: SecretScanning
