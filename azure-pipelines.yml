@@ -14,6 +14,8 @@ variables:
   - group: contrast-secrets
   - name: NODE_VERSION
     value: '20.x'
+  - name: SECURITY_IMAGE
+    value: 'namnamvt3/security-pipeline:1.0'
   - name: npm_config_cache
     value: '$(Pipeline.Workspace)/.npm'
   - name: START_COMMAND
@@ -67,10 +69,14 @@ stages:
     jobs:
       - job: SecuritySuite
         displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
-        container: securitytools
         steps:
           - checkout: self
             fetchDepth: 0
+
+          - task: NodeTool@0
+            displayName: 'Use Node.js $(NODE_VERSION)'
+            inputs:
+              versionSpec: '$(NODE_VERSION)'
 
           - task: Cache@2
             displayName: 'Restore npm cache'
@@ -82,29 +88,42 @@ stages:
 
           - bash: |
               set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
+              mkdir -p "$(Build.ArtifactStagingDirectory)" "$(npm_config_cache)"
               npm ci --cache "$(npm_config_cache)" --prefer-offline
-            displayName: 'Install project dependencies once'
+            displayName: 'Install project dependencies once on host'
 
           - bash: |
               set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              gitleaks git . \
+              docker pull "$(SECURITY_IMAGE)"
+              docker rm -f securitytools-runner >/dev/null 2>&1 || true
+              docker run -d --name securitytools-runner \
+                --network host \
+                -v "$(Build.SourcesDirectory):/workspace" \
+                -v "$(Build.ArtifactStagingDirectory):/artifacts" \
+                -v "$(npm_config_cache):/npm-cache" \
+                -w /workspace \
+                -e npm_config_cache=/npm-cache \
+                "$(SECURITY_IMAGE)" \
+                tail -f /dev/null
+            displayName: 'Start reusable security tools container'
+
+          - bash: |
+              set -euxo pipefail
+              docker exec securitytools-runner gitleaks git /workspace \
                 --redact \
                 --report-format sarif \
-                --report-path "$(Build.ArtifactStagingDirectory)/gitleaks.sarif"
+                --report-path /artifacts/gitleaks.sarif
             displayName: 'Secret scanning with Gitleaks'
 
           - bash: |
               set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              semgrep scan \
+              docker exec securitytools-runner semgrep scan \
                 --config p/javascript \
                 --config p/nodejs \
                 --config p/owasp-top-ten \
                 --sarif \
-                --output "$(Build.ArtifactStagingDirectory)/semgrep.sarif" \
-                --error .
+                --output /artifacts/semgrep.sarif \
+                --error /workspace
             displayName: 'SAST with Semgrep'
 
           - bash: |
@@ -141,7 +160,7 @@ stages:
                 CONFIG_ARG="-I"
               fi
 
-              docker run --rm --network=host \
+              docker run --rm --network host \
                 -v "$(Build.ArtifactStagingDirectory)/zap:/zap/wrk" \
                 ghcr.io/zaproxy/zaproxy:stable \
                 zap-baseline.py \
@@ -180,7 +199,8 @@ stages:
               if [ -f "$(Build.ArtifactStagingDirectory)/app-security.pid" ]; then
                 kill "$(cat "$(Build.ArtifactStagingDirectory)/app-security.pid")" || true
               fi
-            displayName: 'Stop local app'
+              docker rm -f securitytools-runner >/dev/null 2>&1 || true
+            displayName: 'Stop local app and security tools container'
             condition: always()
 
           - task: PublishPipelineArtifact@1
@@ -230,7 +250,6 @@ stages:
     jobs:
       - job: BuildAndDeployMTA
         displayName: 'Build MTAR and deploy with CF and MultiApps'
-        container: securitytools
         steps:
           - checkout: self
             fetchDepth: 1
@@ -245,32 +264,29 @@ stages:
 
           - bash: |
               set -euxo pipefail
-              npm ci --cache "$(npm_config_cache)" --prefer-offline
-              mbt build -p=cf
-              ls -lah mta_archives
-            displayName: 'Build MTAR with mbt'
+              mkdir -p "$(npm_config_cache)"
+              docker pull "$(SECURITY_IMAGE)"
+              docker run --rm \
+                -v "$(Build.SourcesDirectory):/workspace" \
+                -v "$(npm_config_cache):/npm-cache" \
+                -w /workspace \
+                -e npm_config_cache=/npm-cache \
+                "$(SECURITY_IMAGE)" \
+                bash -lc 'npm ci --cache "$npm_config_cache" --prefer-offline && mbt build -p=cf && ls -lah mta_archives'
+            displayName: 'Build MTAR with mbt inside tools image'
 
           - bash: |
               set -euxo pipefail
-              cf version
-              cf plugins
-              cf login \
-                -a "$(BTP_CF_API)" \
-                -u "$(BTP_CF_USERNAME)" \
-                -p "$(BTP_CF_PASSWORD)" \
-                -o "$(BTP_CF_ORG)" \
-                -s "$(BTP_CF_SPACE)"
-              cf target
-            displayName: 'Login to Cloud Foundry'
-
-          - bash: |
-              set -euxo pipefail
-              MTAR_FILE=$(find mta_archives -maxdepth 1 -name '*.mtar' | head -n 1)
-              if [ -z "$MTAR_FILE" ]; then
-                echo 'No MTAR file produced in mta_archives'
-                exit 1
-              fi
-              cf deploy "$MTAR_FILE" -f --version-rule ALL
+              docker run --rm \
+                -v "$(Build.SourcesDirectory):/workspace" \
+                -w /workspace \
+                -e BTP_CF_API="$(BTP_CF_API)" \
+                -e BTP_CF_USERNAME="$(BTP_CF_USERNAME)" \
+                -e BTP_CF_PASSWORD="$(BTP_CF_PASSWORD)" \
+                -e BTP_CF_ORG="$(BTP_CF_ORG)" \
+                -e BTP_CF_SPACE="$(BTP_CF_SPACE)" \
+                "$(SECURITY_IMAGE)" \
+                bash -lc 'cf version && cf plugins && cf login -a "$BTP_CF_API" -u "$BTP_CF_USERNAME" -p "$BTP_CF_PASSWORD" -o "$BTP_CF_ORG" -s "$BTP_CF_SPACE" && cf target && MTAR_FILE=$(find mta_archives -maxdepth 1 -name "*.mtar" | head -n 1) && if [ -z "$MTAR_FILE" ]; then echo "No MTAR file produced in mta_archives"; exit 1; fi && cf deploy "$MTAR_FILE" -f --version-rule ALL'
             displayName: 'Deploy MTAR to SAP BTP Cloud Foundry'
 
           - task: PublishPipelineArtifact@1
