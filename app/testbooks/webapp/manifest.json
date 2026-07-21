@@ -107,9 +107,7 @@
         {
           "name": "RouteBooks",
           "pattern": ":?query:",
-          "target": [
-            "TargetBooks"
-          ]
+          "target": ["TargetBooks"]
         }
       ],
       "targets": {

@@ -76,8 +76,7 @@ modules:
       commands:
         - npm ci
         - npm run build
-      supported-platforms:
-        []
+      supported-platforms: []
   - name: capnodejsbrowse
     type: html5
     path: app/browse
@@ -87,8 +86,7 @@ modules:
       commands:
         - npm ci
         - npm run build
-      supported-platforms:
-        []
+      supported-platforms: []
   - name: testbooks
     type: html5
     path: app/testbooks
@@ -100,8 +98,7 @@ modules:
         - npm run build:cf
         - npm ci
         - npm run build
-      supported-platforms:
-        []
+      supported-platforms: []
 resources:
   - name: capnodejs-html5-repo-host
     type: org.cloudfoundry.managed-service

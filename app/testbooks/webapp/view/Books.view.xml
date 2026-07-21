@@ -1,13 +1,15 @@
-<mvc:View controllerName="testbooks.controller.Books"
-    xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
+<mvc:View
+  controllerName="testbooks.controller.Books"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+>
     <Page id="page" title="{i18n>title}">
         <Table
-            id="mytable"
-            items="{/Books}"
-            mode="SingleSelectMaster"
-            itemPress=".onSelectionChange"
-        >
+      id="mytable"
+      items="{/Books}"
+      mode="SingleSelectMaster"
+      itemPress=".onSelectionChange"
+    >
             <columns>
                 <Column>
                     <Text text="{i18n>title}" />
@@ -24,7 +26,9 @@
                     <cells>
                         <Text text="{title}" />
                         <Text text="{author/name}" />
-                        <Text text="{path: 'price', formatter: '.formatter.formatPrice'}" />
+                        <Text
+              text="{path: 'price', formatter: '.formatter.formatPrice'}"
+            />
                     </cells>
                 </ColumnListItem>
             </items>

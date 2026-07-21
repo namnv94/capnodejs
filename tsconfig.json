@@ -23,16 +23,7 @@
     "types": ["node"]
   },
 
-  "include": [
-    "srv/**/*.ts",
-    "db/**/*.ts",
-    "test/**/*.ts"
-  ],
+  "include": ["srv/**/*.ts", "db/**/*.ts", "test/**/*.ts"],
 
-  "exclude": [
-    "node_modules",
-    "gen",
-    "dist",
-    "coverage"
-  ]
+  "exclude": ["node_modules", "gen", "dist", "coverage"]
 }
