@@ -4,11 +4,6 @@ pr: none
 pool:
   vmImage: 'ubuntu-latest'
 
-resources:
-  containers:
-    - container: securitytools
-      image: namnamvt3/security-pipeline:1.0
-
 variables:
   - group: sap-btp-secrets
   - group: contrast-secrets
