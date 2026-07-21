@@ -49,9 +49,9 @@
     "cdslint:fix": "npx cds lint db srv --fix",
     "format": "npx prettier . --write",
     "format:check": "npx prettier . --check",
-    "test": "npm run lint && npm run test:cds && npm run test:testbooks",
+    "test": "npm run lint && npm run test:ui5",
     "test:testbooks": "concurrently -k -n \"CAP,UI5\" -c \"blue,cyan\" \"npx cds-serve\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\"",
-    "test:cds": "npx cds test",
+    "test:cds": "npx cds test --verbose",
     "test:ui5": "concurrently -k -n \"CAP,UI5\" -c \"blue,cyan\" \"npm run start\" \"wait-on http://localhost:4004 && npm run test-runner\"",
     "test-runner": "npx puppeteer browsers install chrome && ui5-test-runner"
   },

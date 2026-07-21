@@ -7,7 +7,7 @@ describe('AdminService OData APIs', () => {
     const { data } =
       await GET`/odata/v4/admin/Books ${{ params: { $select: 'ID,title' } }}`;
     expect(data.value).to.containSubset([
-      { ID: 25415501, title: 'title-25415501' }
+      { ID: 201, title: 'Wuthering Heights' }
     ]);
   });
 });
