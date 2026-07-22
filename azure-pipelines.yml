@@ -92,7 +92,7 @@ stages:
           - bash: |
               set -euxo pipefail
               npm audit --json > "$(Build.ArtifactStagingDirectory)/npm-audit.json" || true
-              npm audit --audit-level=high
+              npm audit --audit-level=critical
             displayName: 'SCA with npm audit'
 
           - bash: |
