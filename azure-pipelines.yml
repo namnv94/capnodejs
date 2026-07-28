@@ -13,7 +13,7 @@ variables:
   - group: sap-btp-secrets
   - group: contrast-secrets
   - name: NODE_VERSION
-    value: '20.x'
+    value: '22.x'
   - name: START_COMMAND
     value: 'npm run start'
   - name: APP_URL
