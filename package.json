@@ -11,11 +11,16 @@
     "express": "^4.22.2"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/eslint-parser": "^8.0.1",
     "@cap-js/cds-test": "^1.0.1",
     "@cap-js/cds-types": "^0.18.0",
     "@eslint/js": "^10.0.1",
+    "@eslint/json": "^2.0.1",
+    "@humanwhocodes/momoa": "^3.3.10",
     "@prettier/plugin-xml": "^3.4.2",
     "@sap-ux/eslint-plugin-fiori-tools": "^10.7.14",
+    "@sap-ux/fiori-annotation-api": "^1.0.20",
     "@sap/cds-dk": "^10.0.6",
     "@sap/eslint-plugin-cds": "^4.2.5",
     "@typescript-eslint/eslint-plugin": "^8.62.0",
