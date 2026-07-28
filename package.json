@@ -7,7 +7,7 @@
   "private": true,
   "dependencies": {
     "@cap-js/sqlite": "^2.4.0",
-    "@sap/cds": "^9.9.1",
+    "@sap/cds": "^10.0.4",
     "express": "^4"
   },
   "devDependencies": {
@@ -16,12 +16,11 @@
     "@eslint/js": "^10.0.1",
     "@prettier/plugin-xml": "^3.4.2",
     "@sap-ux/eslint-plugin-fiori-tools": "^10.6.5",
-    "@sap/cds-dk": "^9.9.2",
+    "@sap/cds-dk": "^10.0.6",
     "@sap/eslint-plugin-cds": "^4",
     "@typescript-eslint/eslint-plugin": "^8.62.0",
     "@typescript-eslint/parser": "^8.62.0",
     "@ui5/linter": "^1.23.1",
-    "cds-plugin-ui5": "^0.13.0",
     "concurrently": "^10.0.3",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
