@@ -55,7 +55,7 @@
     "format:check": "npx prettier . --check",
     "test": "npm run lint && npm run test:cds && npm run test:ui5",
     "test:testbooks": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npx cds-serve\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\"",
-    "test:cds": "npx cds test --verbose",
+    "test:cds": "cds deploy --to sqlite && npx cds test --verbose",
     "test:ui5": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npm run start\" \"wait-on http://localhost:4004 && npm run test-runner\"",
     "test-runner": "npx puppeteer browsers install chrome && ui5-test-runner"
   },
