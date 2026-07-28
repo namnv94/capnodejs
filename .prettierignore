@@ -1,6 +1,7 @@
 node_modules/
 dist/
 gen/
+report/
 coverage/
 .resources/
 .mta_archives/

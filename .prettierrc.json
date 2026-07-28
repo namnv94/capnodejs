@@ -9,6 +9,8 @@
   "bracketSpacing": true,
   "bracketSameLine": false,
   "arrowParens": "always",
-  "endOfLine": "lf",
-  "plugins": ["@prettier/plugin-xml"]
+  "endOfLine": "auto",
+  "plugins": [
+    "@prettier/plugin-xml"
+  ]
 }
