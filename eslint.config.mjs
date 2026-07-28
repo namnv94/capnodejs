@@ -19,6 +19,7 @@ export default [
       '.cds-services/**',
       'app/**/node_modules/**',
       'app/**/dist/**',
+      'app/**/tmp/**',
       'tmp/**'
     ]
   },

@@ -1,7 +1,7 @@
 sap.ui.define(
-  ['sap/ui/model/json/JSONModel', 'sap/ui/Device'],
+  ["sap/ui/model/json/JSONModel", "sap/ui/Device"],
   function (JSONModel, Device) {
-    'use strict';
+    "use strict";
 
     return {
       /**
@@ -10,7 +10,7 @@ sap.ui.define(
        */
       createDeviceModel: function () {
         var oModel = new JSONModel(Device);
-        oModel.setDefaultBindingMode('OneWay');
+        oModel.setDefaultBindingMode("OneWay");
         return oModel;
       }
     };

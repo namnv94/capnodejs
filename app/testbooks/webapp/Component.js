@@ -1,12 +1,12 @@
 sap.ui.define(
-  ['sap/ui/core/UIComponent', 'testbooks/model/models'],
+  ["sap/ui/core/UIComponent", "testbooks/model/models"],
   (UIComponent, models) => {
-    'use strict';
+    "use strict";
 
-    return UIComponent.extend('testbooks.Component', {
+    return UIComponent.extend("testbooks.Component", {
       metadata: {
-        manifest: 'json',
-        interfaces: ['sap.ui.core.IAsyncContentCreation']
+        manifest: "json",
+        interfaces: ["sap.ui.core.IAsyncContentCreation"]
       },
 
       init() {
@@ -14,7 +14,7 @@ sap.ui.define(
         UIComponent.prototype.init.apply(this, arguments);
 
         // set the device model
-        this.setModel(models.createDeviceModel(), 'device');
+        this.setModel(models.createDeviceModel(), "device");
 
         // enable routing
         this.getRouter().initialize();
