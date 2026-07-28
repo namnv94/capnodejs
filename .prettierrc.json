@@ -10,7 +10,5 @@
   "bracketSameLine": false,
   "arrowParens": "always",
   "endOfLine": "auto",
-  "plugins": [
-    "@prettier/plugin-xml"
-  ]
+  "plugins": ["@prettier/plugin-xml"]
 }
