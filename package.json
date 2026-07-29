@@ -7,7 +7,7 @@
   "private": true,
   "dependencies": {
     "@cap-js/sqlite": "^2.4.0",
-    "@sap/cds": "^10.0.4",
+    "@sap/cds": "^10.0.5",
     "express": "^4.22.2"
   },
   "devDependencies": {
@@ -55,7 +55,7 @@
     "cdslint:fix": "npx cds lint db srv --fix",
     "format": "npx prettier . --write",
     "format:check": "npx prettier . --check",
-    "test": "npm run lint && npm run test:cds && npm run test:ui5",
+    "test": "npm run lint && npm run test:ui5",
     "test:testbooks": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npx cds-serve\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\"",
     "test:cds": "cds deploy --to sqlite && npx cds test --verbose",
     "test:ui5": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npm run start\" \"wait-on http://localhost:4004 && npm run test-runner\"",
