@@ -1,5 +1,5 @@
 {
   "url": [
-    "http://localhost:8080/test/testsuite.qunit.html"
+    "http://localhost:4004/testbooks/test/testsuite.qunit.html"
   ]
 }
