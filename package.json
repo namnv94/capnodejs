@@ -62,7 +62,7 @@
     "test:testbooks": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npx cds-serve\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\"",
     "test:cds": "npm run start:sqlite && npx cds test --verbose",
     "test:ui5": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npm run start\" \"wait-on http://localhost:4004 && npm run test-runner\"",
-    "test-runner": "npx puppeteer browsers install chrome && npx ui5-test-runner"
+    "test-runner": "npx puppeteer browsers install chrome && npx ui5-test-runner --browser $/webdriverio.js -- --browser firefox"
   },
   "sapux": [
     "app/admin-books",
