@@ -41,7 +41,7 @@
     "wait-on": "^9.1.0"
   },
   "scripts": {
-    "start": "cross-env CDS_PLUGIN_UI5_LAZY_LOADING=true run-s start:sqlite start:cap",
+    "start": "npx cds deploy --to sqlite && cross-env CDS_PLUGIN_UI5_LAZY_LOADING=true npx cds watch",
     "start:cap": "npx cds watch",
     "start:sqlite": "npx cds deploy --to sqlite",
     "watch-testbooks": "cds watch --open testbooks/index.html?sap-ui-xx-viewCache=false --livereload false",
@@ -59,10 +59,10 @@
     "format": "npx prettier . --write",
     "format:check": "npx prettier . --check",
     "test": "npm run lint && npm run test:ui5",
-    "test:testbooks": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npx cds-serve\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\"",
+    "test:testbooks": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npm run start\" \"wait-on http://localhost:4004 && npm --prefix app/testbooks run test\"",
     "test:cds": "npm run start:sqlite && npx cds test --verbose",
     "test:ui5": "concurrently -k --success first -n \"CAP,UI5\" -c \"blue,cyan\" \"npm run start\" \"wait-on http://localhost:4004 && npm run test-runner\"",
-    "test-runner": "npx puppeteer browsers install chrome && npx ui5-test-runner --browser $/webdriverio.js -- --browser firefox"
+    "test-runner": "npx puppeteer browsers install firefox && npx ui5-test-runner --browser firefox"
   },
   "sapux": [
     "app/admin-books",
