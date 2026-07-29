@@ -17,7 +17,7 @@ variables:
   - name: START_COMMAND
     value: 'npm run start'
   - name: APP_URL
-    value: 'http://127.0.0.1:4004'
+    value: 'http://localhost:4004'
   - name: DAST_MINUTES
     value: '3'
   - name: SMOKE_PATHS
