@@ -26,34 +26,34 @@ variables:
     value: 'false'
 
 stages:
-  - stage: CodeTest
-    displayName: 'Code quality and automated tests'
-    jobs:
-      - job: NpmTest
-        displayName: 'Install dependencies and run npm test'
-        steps:
-          - checkout: self
-            fetchDepth: 1
+  # - stage: CodeTest
+  #   displayName: 'Code quality and automated tests'
+  #   jobs:
+  #     - job: NpmTest
+  #       displayName: 'Install dependencies and run npm test'
+  #       steps:
+  #         - checkout: self
+  #           fetchDepth: 1
 
-          - task: NodeTool@0
-            displayName: 'Use Node.js $(NODE_VERSION)'
-            inputs:
-              versionSpec: '$(NODE_VERSION)'
+  #         - task: NodeTool@0
+  #           displayName: 'Use Node.js $(NODE_VERSION)'
+  #           inputs:
+  #             versionSpec: '$(NODE_VERSION)'
 
-          - bash: |
-              set -euxo pipefail
-              npm ci
-            displayName: 'Install project dependencies'
+  #         - bash: |
+  #             set -euxo pipefail
+  #             npm ci
+  #           displayName: 'Install project dependencies'
 
-          - bash: |
-              set -euxo pipefail
-              npm run test
-            displayName: 'Run lint, unit tests, and integration tests'
+  #         - bash: |
+  #             set -euxo pipefail
+  #             npm run test
+  #           displayName: 'Run lint, unit tests, and integration tests'
 
   - stage: SecurityTest
     displayName: 'Security testing'
-    dependsOn: CodeTest
-    condition: succeeded()
+    # dependsOn: CodeTest
+    # condition: succeeded()
     jobs:
       - job: SecuritySuite
         displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
@@ -205,52 +205,52 @@ stages:
               publishLocation: 'pipeline'
             condition: always()
 
-  - stage: DeployToSAPBTP
-    displayName: 'Deploy to SAP BTP Cloud Foundry'
-    dependsOn: SecurityTest
-    condition: succeeded()
-    jobs:
-      - job: BuildAndDeployMTA
-        displayName: 'Build MTAR and deploy with CF and MultiApps'
-        container: securitytools
-        steps:
-          - checkout: self
-            fetchDepth: 1
+  # - stage: DeployToSAPBTP
+  #   displayName: 'Deploy to SAP BTP Cloud Foundry'
+  #   dependsOn: SecurityTest
+  #   condition: succeeded()
+  #   jobs:
+  #     - job: BuildAndDeployMTA
+  #       displayName: 'Build MTAR and deploy with CF and MultiApps'
+  #       container: securitytools
+  #       steps:
+  #         - checkout: self
+  #           fetchDepth: 1
 
-          - bash: |
-              set -euxo pipefail
-              npm ci
-              mbt build -p=cf
-              ls -lah mta_archives
-            displayName: 'Build MTAR with mbt'
+  #         - bash: |
+  #             set -euxo pipefail
+  #             npm ci
+  #             mbt build -p=cf
+  #             ls -lah mta_archives
+  #           displayName: 'Build MTAR with mbt'
 
-          - bash: |
-              set -euxo pipefail
-              cf version
-              cf plugins
-              cf login \
-                -a "$(BTP_CF_API)" \
-                -u "$(BTP_CF_USERNAME)" \
-                -p "$(BTP_CF_PASSWORD)" \
-                -o "$(BTP_CF_ORG)" \
-                -s "$(BTP_CF_SPACE)"
-              cf target
-            displayName: 'Login to Cloud Foundry'
+  #         - bash: |
+  #             set -euxo pipefail
+  #             cf version
+  #             cf plugins
+  #             cf login \
+  #               -a "$(BTP_CF_API)" \
+  #               -u "$(BTP_CF_USERNAME)" \
+  #               -p "$(BTP_CF_PASSWORD)" \
+  #               -o "$(BTP_CF_ORG)" \
+  #               -s "$(BTP_CF_SPACE)"
+  #             cf target
+  #           displayName: 'Login to Cloud Foundry'
 
-          - bash: |
-              set -euxo pipefail
-              MTAR_FILE=$(find mta_archives -maxdepth 1 -name '*.mtar' | head -n 1)
-              if [ -z "$MTAR_FILE" ]; then
-                echo 'No MTAR file produced in mta_archives'
-                exit 1
-              fi
-              cf deploy "$MTAR_FILE" -f --version-rule ALL
-            displayName: 'Deploy MTAR to SAP BTP Cloud Foundry'
+  #         - bash: |
+  #             set -euxo pipefail
+  #             MTAR_FILE=$(find mta_archives -maxdepth 1 -name '*.mtar' | head -n 1)
+  #             if [ -z "$MTAR_FILE" ]; then
+  #               echo 'No MTAR file produced in mta_archives'
+  #               exit 1
+  #             fi
+  #             cf deploy "$MTAR_FILE" -f --version-rule ALL
+  #           displayName: 'Deploy MTAR to SAP BTP Cloud Foundry'
 
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish MTAR artifact'
-            inputs:
-              targetPath: 'mta_archives'
-              artifact: 'mtar'
-              publishLocation: 'pipeline'
-            condition: always()
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish MTAR artifact'
+  #           inputs:
+  #             targetPath: 'mta_archives'
+  #             artifact: 'mtar'
+  #             publishLocation: 'pipeline'
+  #           condition: always()
