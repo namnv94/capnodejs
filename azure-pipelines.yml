@@ -7,7 +7,7 @@ pool:
 resources:
   containers:
     - container: securitytools
-      image: namnamvt3/security-pipeline:latest
+      image: namnamvt3/security-pipeline:1.0
 
 variables:
   - group: sap-btp-secrets
