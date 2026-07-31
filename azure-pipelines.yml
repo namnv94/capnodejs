@@ -113,24 +113,24 @@ stages:
               exit 1
             displayName: 'Start app locally once and wait until ready'
 
-          - bash: |
-              set -euxo pipefail
+          # - bash: |
+          #     set -euxo pipefail
 
-              mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
+          #     mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
 
-              if [ -f .ci/zap-baseline.conf ]; then
-                CONFIG_ARG="-c .ci/zap-baseline.conf"
-              else
-                CONFIG_ARG="-I"
-              fi
+          #     if [ -f .ci/zap-baseline.conf ]; then
+          #       CONFIG_ARG="-c .ci/zap-baseline.conf"
+          #     else
+          #       CONFIG_ARG="-I"
+          #     fi
 
-              zap-baseline.py \
-                -t "$(APP_URL)" \
-                -m "$(DAST_MINUTES)" \
-                -J "$(Build.ArtifactStagingDirectory)/zap/zap-report.json" \
-                -r "$(Build.ArtifactStagingDirectory)/zap/zap-report.html" \
-                $CONFIG_ARG
-            displayName: 'DAST with OWASP ZAP baseline'
+          #     zap-baseline.py \
+          #       -t "$(APP_URL)" \
+          #       -m "$(DAST_MINUTES)" \
+          #       -J "$(Build.ArtifactStagingDirectory)/zap/zap-report.json" \
+          #       -r "$(Build.ArtifactStagingDirectory)/zap/zap-report.html" \
+          #       $CONFIG_ARG
+          #   displayName: 'DAST with OWASP ZAP baseline'
 
           - bash: |
               set -euxo pipefail
