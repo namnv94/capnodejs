@@ -115,22 +115,20 @@ stages:
 
           - bash: |
               set -euxo pipefail
+
               mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
+
               if [ -f .ci/zap-baseline.conf ]; then
-                CONFIG_ARG="-c /zap/wrk/zap-baseline.conf"
-                cp .ci/zap-baseline.conf "$(Build.ArtifactStagingDirectory)/zap/zap-baseline.conf"
+                CONFIG_ARG="-c .ci/zap-baseline.conf"
               else
                 CONFIG_ARG="-I"
               fi
 
-              docker run --rm --network=host \
-                -v "$(Build.ArtifactStagingDirectory)/zap:/zap/wrk" \
-                ghcr.io/zaproxy/zaproxy:stable \
-                zap-baseline.py \
+              zap-baseline.py \
                 -t "$(APP_URL)" \
                 -m "$(DAST_MINUTES)" \
-                -J zap-report.json \
-                -r zap-report.html \
+                -J "$(Build.ArtifactStagingDirectory)/zap/zap-report.json" \
+                -r "$(Build.ArtifactStagingDirectory)/zap/zap-report.html" \
                 $CONFIG_ARG
             displayName: 'DAST with OWASP ZAP baseline'
 
