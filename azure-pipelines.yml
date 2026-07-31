@@ -64,7 +64,6 @@ stages:
 
           - bash: |
               set -euxo pipefail
-              sudo chown -R 1001:1001 "/home/zap/.npm"
               mkdir -p "$(Build.ArtifactStagingDirectory)"
               npm ci
             displayName: 'Install project dependencies once'
