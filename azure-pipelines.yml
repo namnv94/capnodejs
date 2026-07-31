@@ -187,13 +187,13 @@ stages:
               publishLocation: 'pipeline'
             condition: always()
 
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish DAST report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/zap'
-              artifact: 'dast-report'
-              publishLocation: 'pipeline'
-            condition: always()
+          # - task: PublishPipelineArtifact@1
+          #   displayName: 'Publish DAST report'
+          #   inputs:
+          #     targetPath: '$(Build.ArtifactStagingDirectory)/zap'
+          #     artifact: 'dast-report'
+          #     publishLocation: 'pipeline'
+          #   condition: always()
 
           - task: PublishPipelineArtifact@1
             displayName: 'Publish local app log'
