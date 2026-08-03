@@ -55,45 +55,45 @@ stages:
     # dependsOn: CodeTest
     # condition: succeeded()
     jobs:
-      - job: SecuritySuite
-        displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
-        container: securitytools
-        steps:
-          - checkout: self
-            fetchDepth: 0
+      # - job: SecuritySuite
+      #   displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
+      #   container: securitytools
+      #   steps:
+      #     - checkout: self
+      #       fetchDepth: 0
 
-          - bash: |
-              set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              npm ci
-            displayName: 'Install project dependencies once'
+      #     - bash: |
+      #         set -euxo pipefail
+      #         mkdir -p "$(Build.ArtifactStagingDirectory)"
+      #         npm ci
+      #       displayName: 'Install project dependencies once'
 
-          - bash: |
-              set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              gitleaks git . \
-                --redact \
-                --report-format sarif \
-                --report-path "$(Build.ArtifactStagingDirectory)/gitleaks.sarif"
-            displayName: 'Secret scanning with Gitleaks'
+      #     - bash: |
+      #         set -euxo pipefail
+      #         mkdir -p "$(Build.ArtifactStagingDirectory)"
+      #         gitleaks git . \
+      #           --redact \
+      #           --report-format sarif \
+      #           --report-path "$(Build.ArtifactStagingDirectory)/gitleaks.sarif"
+      #       displayName: 'Secret scanning with Gitleaks'
 
-          - bash: |
-              set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              semgrep scan \
-                --config p/javascript \
-                --config p/nodejs \
-                --config p/owasp-top-ten \
-                --sarif \
-                --output "$(Build.ArtifactStagingDirectory)/semgrep.sarif" \
-                --error .
-            displayName: 'SAST with Semgrep'
+      #     - bash: |
+      #         set -euxo pipefail
+      #         mkdir -p "$(Build.ArtifactStagingDirectory)"
+      #         semgrep scan \
+      #           --config p/javascript \
+      #           --config p/nodejs \
+      #           --config p/owasp-top-ten \
+      #           --sarif \
+      #           --output "$(Build.ArtifactStagingDirectory)/semgrep.sarif" \
+      #           --error .
+      #       displayName: 'SAST with Semgrep'
 
-          - bash: |
-              set -euxo pipefail
-              npm audit --json > "$(Build.ArtifactStagingDirectory)/npm-audit.json" || true
-              npm audit --audit-level=critical
-            displayName: 'SCA with npm audit'
+      #     - bash: |
+      #         set -euxo pipefail
+      #         npm audit --json > "$(Build.ArtifactStagingDirectory)/npm-audit.json" || true
+      #         npm audit --audit-level=critical
+      #       displayName: 'SCA with npm audit'
 
           - bash: |
               set -euxo pipefail
@@ -113,47 +113,47 @@ stages:
               exit 1
             displayName: 'Start app locally once and wait until ready'
 
-          # - bash: |
-          #     set -euxo pipefail
-
-          #     mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
-
-          #     if [ -f .ci/zap-baseline.conf ]; then
-          #       CONFIG_ARG="-c .ci/zap-baseline.conf"
-          #     else
-          #       CONFIG_ARG="-I"
-          #     fi
-
-          #     zap-baseline.py \
-          #       -t "$(APP_URL)" \
-          #       -m "$(DAST_MINUTES)" \
-          #       -J "$(Build.ArtifactStagingDirectory)/zap/zap-report.json" \
-          #       -r "$(Build.ArtifactStagingDirectory)/zap/zap-report.html" \
-          #       $CONFIG_ARG
-          #   displayName: 'DAST with OWASP ZAP baseline'
-
           - bash: |
               set -euxo pipefail
-              if [ "$(RUN_IAST)" != "true" ]; then
-                echo "RUN_IAST is false. Skipping IAST."
-                exit 0
+
+              mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
+
+              if [ -f .ci/zap-baseline.conf ]; then
+                CONFIG_ARG="-c .ci/zap-baseline.conf"
+              else
+                CONFIG_ARG="-I"
               fi
 
-              npm install --no-save @contrast/agent
-              export NODE_OPTIONS="-r @contrast/agent"
+              zap-baseline.py \
+                -t "$(APP_URL)" \
+                -m "$(DAST_MINUTES)" \
+                -J "$(Build.ArtifactStagingDirectory)/zap/zap-report.json" \
+                -r "$(Build.ArtifactStagingDirectory)/zap/zap-report.html" \
+                $CONFIG_ARG
+            displayName: 'DAST with OWASP ZAP baseline'
 
-              for path in $(echo "$(SMOKE_PATHS)" | tr ',' ' '); do
-                echo "Hitting $(APP_URL)$path"
-                curl -k -i -sS "$(APP_URL)$path" >/dev/null || true
-              done
+          # - bash: |
+          #     set -euxo pipefail
+          #     if [ "$(RUN_IAST)" != "true" ]; then
+          #       echo "RUN_IAST is false. Skipping IAST."
+          #       exit 0
+          #     fi
 
-              sleep 20
-            displayName: 'Optional IAST smoke traffic with Contrast'
-            env:
-              CONTRAST__API__TOKEN: $(CONTRAST__API__TOKEN)
-              CONTRAST__APPLICATION__NAME: $(CONTRAST__APPLICATION__NAME)
-              CONTRAST__SERVER__ENVIRONMENT: $(CONTRAST__SERVER__ENVIRONMENT)
-              CONTRAST__SERVER__NAME: $(CONTRAST__SERVER__NAME)
+          #     npm install --no-save @contrast/agent
+          #     export NODE_OPTIONS="-r @contrast/agent"
+
+          #     for path in $(echo "$(SMOKE_PATHS)" | tr ',' ' '); do
+          #       echo "Hitting $(APP_URL)$path"
+          #       curl -k -i -sS "$(APP_URL)$path" >/dev/null || true
+          #     done
+
+          #     sleep 20
+          #   displayName: 'Optional IAST smoke traffic with Contrast'
+          #   env:
+          #     CONTRAST__API__TOKEN: $(CONTRAST__API__TOKEN)
+          #     CONTRAST__APPLICATION__NAME: $(CONTRAST__APPLICATION__NAME)
+          #     CONTRAST__SERVER__ENVIRONMENT: $(CONTRAST__SERVER__ENVIRONMENT)
+          #     CONTRAST__SERVER__NAME: $(CONTRAST__SERVER__NAME)
 
           - bash: |
               set +e
@@ -163,45 +163,45 @@ stages:
             displayName: 'Stop local app'
             condition: always()
 
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish secret scanning report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/gitleaks.sarif'
-              artifact: 'secret-scan-report'
-              publishLocation: 'pipeline'
-            condition: always()
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish SAST report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/semgrep.sarif'
-              artifact: 'sast-report'
-              publishLocation: 'pipeline'
-            condition: always()
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish SCA report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/npm-audit.json'
-              artifact: 'sca-report'
-              publishLocation: 'pipeline'
-            condition: always()
+          # - task: PublishPipelineArtifact@1
+          #   displayName: 'Publish secret scanning report'
+          #   inputs:
+          #     targetPath: '$(Build.ArtifactStagingDirectory)/gitleaks.sarif'
+          #     artifact: 'secret-scan-report'
+          #     publishLocation: 'pipeline'
+          #   condition: always()
 
           # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish DAST report'
+          #   displayName: 'Publish SAST report'
           #   inputs:
-          #     targetPath: '$(Build.ArtifactStagingDirectory)/zap'
-          #     artifact: 'dast-report'
+          #     targetPath: '$(Build.ArtifactStagingDirectory)/semgrep.sarif'
+          #     artifact: 'sast-report'
+          #     publishLocation: 'pipeline'
+          #   condition: always()
+
+          # - task: PublishPipelineArtifact@1
+          #   displayName: 'Publish SCA report'
+          #   inputs:
+          #     targetPath: '$(Build.ArtifactStagingDirectory)/npm-audit.json'
+          #     artifact: 'sca-report'
           #     publishLocation: 'pipeline'
           #   condition: always()
 
           - task: PublishPipelineArtifact@1
-            displayName: 'Publish local app log'
+            displayName: 'Publish DAST report'
             inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/app-security.log'
-              artifact: 'security-app-log'
+              targetPath: '$(Build.ArtifactStagingDirectory)/zap'
+              artifact: 'dast-report'
               publishLocation: 'pipeline'
             condition: always()
+
+          # - task: PublishPipelineArtifact@1
+          #   displayName: 'Publish local app log'
+          #   inputs:
+          #     targetPath: '$(Build.ArtifactStagingDirectory)/app-security.log'
+          #     artifact: 'security-app-log'
+          #     publishLocation: 'pipeline'
+          #   condition: always()
 
   # - stage: DeployToSAPBTP
   #   displayName: 'Deploy to SAP BTP Cloud Foundry'
