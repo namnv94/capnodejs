@@ -23,7 +23,7 @@ variables:
   - name: SMOKE_PATHS
     value: '/,/health'
   - name: RUN_IAST
-    value: 'false'
+    value: 'true'
 
 stages:
   # - stage: CodeTest
@@ -113,49 +113,49 @@ stages:
               exit 1
             displayName: 'Start app locally once and wait until ready'
 
-          - bash: |
-              set -euxo pipefail
-
-              mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
-
-              if [ -f .ci/zap-baseline.conf ]; then
-                CONFIG_ARG="-c .ci/zap-baseline.conf"
-              else
-                CONFIG_ARG="-I"
-              fi
-
-              zap-baseline.py \
-                -t "$(APP_URL)" \
-                -m "$(DAST_MINUTES)" \
-                -J "/zap-report.json" \
-                -r "/zap-report.html" \
-                $CONFIG_ARG
-              
-              cp -r /zap/wrk/. "$(Build.ArtifactStagingDirectory)/zap" 2>/dev/null
-            displayName: 'DAST with OWASP ZAP baseline'
-
           # - bash: |
           #     set -euxo pipefail
-          #     if [ "$(RUN_IAST)" != "true" ]; then
-          #       echo "RUN_IAST is false. Skipping IAST."
-          #       exit 0
+
+          #     mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
+
+          #     if [ -f .ci/zap-baseline.conf ]; then
+          #       CONFIG_ARG="-c .ci/zap-baseline.conf"
+          #     else
+          #       CONFIG_ARG="-I"
           #     fi
 
-          #     npm install --no-save @contrast/agent
-          #     export NODE_OPTIONS="-r @contrast/agent"
+          #     zap-baseline.py \
+          #       -t "$(APP_URL)" \
+          #       -m "$(DAST_MINUTES)" \
+          #       -J "/zap-report.json" \
+          #       -r "/zap-report.html" \
+          #       $CONFIG_ARG
+              
+          #     cp -r /zap/wrk/. "$(Build.ArtifactStagingDirectory)/zap" 2>/dev/null
+          #   displayName: 'DAST with OWASP ZAP baseline'
 
-          #     for path in $(echo "$(SMOKE_PATHS)" | tr ',' ' '); do
-          #       echo "Hitting $(APP_URL)$path"
-          #       curl -k -i -sS "$(APP_URL)$path" >/dev/null || true
-          #     done
+          - bash: |
+              set -euxo pipefail
+              if [ "$(RUN_IAST)" != "true" ]; then
+                echo "RUN_IAST is false. Skipping IAST."
+                exit 0
+              fi
 
-          #     sleep 20
-          #   displayName: 'Optional IAST smoke traffic with Contrast'
-          #   env:
-          #     CONTRAST__API__TOKEN: $(CONTRAST__API__TOKEN)
-          #     CONTRAST__APPLICATION__NAME: $(CONTRAST__APPLICATION__NAME)
-          #     CONTRAST__SERVER__ENVIRONMENT: $(CONTRAST__SERVER__ENVIRONMENT)
-          #     CONTRAST__SERVER__NAME: $(CONTRAST__SERVER__NAME)
+              npm install --no-save @contrast/agent
+              export NODE_OPTIONS="-r @contrast/agent"
+
+              for path in $(echo "$(SMOKE_PATHS)" | tr ',' ' '); do
+                echo "Hitting $(APP_URL)$path"
+                curl -k -i -sS "$(APP_URL)$path" >/dev/null || true
+              done
+
+              sleep 20
+            displayName: 'Optional IAST smoke traffic with Contrast'
+            env:
+              CONTRAST__API__TOKEN: $(CONTRAST__API__TOKEN)
+              CONTRAST__APPLICATION__NAME: $(CONTRAST__APPLICATION__NAME)
+              CONTRAST__SERVER__ENVIRONMENT: $(CONTRAST__SERVER__ENVIRONMENT)
+              CONTRAST__SERVER__NAME: $(CONTRAST__SERVER__NAME)
 
           - bash: |
               set +e
@@ -189,21 +189,21 @@ stages:
           #     publishLocation: 'pipeline'
           #   condition: always()
 
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish DAST report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/zap'
-              artifact: 'dast-report'
-              publishLocation: 'pipeline'
-            condition: always()
-
           # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish local app log'
+          #   displayName: 'Publish DAST report'
           #   inputs:
-          #     targetPath: '$(Build.ArtifactStagingDirectory)/app-security.log'
-          #     artifact: 'security-app-log'
+          #     targetPath: '$(Build.ArtifactStagingDirectory)/zap'
+          #     artifact: 'dast-report'
           #     publishLocation: 'pipeline'
           #   condition: always()
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish local app log'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/app-security.log'
+              artifact: 'security-app-log'
+              publishLocation: 'pipeline'
+            condition: always()
 
   # - stage: DeployToSAPBTP
   #   displayName: 'Deploy to SAP BTP Cloud Foundry'
