@@ -44,8 +44,4 @@ RUN node --version \
     && zap-baseline.py -h > /dev/null
 
 # Fix permissions for npm cache and zap home
-RUN mkdir -p /home/zap/.npm \
-    && chown -R zap:zap /home/zap
-
-USER zap
-WORKDIR /zap/wrk
+RUN chown -R 1001:1001 /home/zap
