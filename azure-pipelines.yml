@@ -26,231 +26,252 @@ variables:
     value: 'true'
 
 stages:
-  - stage: CodeTest
-    displayName: 'Code quality and automated tests'
-    jobs:
-      - job: NpmTest
-        displayName: 'Install dependencies and run npm test'
-        steps:
-          - checkout: self
-            fetchDepth: 1
-
-          - task: NodeTool@0
-            displayName: 'Use Node.js $(NODE_VERSION)'
-            inputs:
-              versionSpec: '$(NODE_VERSION)'
-
-          - bash: |
-              set -euxo pipefail
-              npm ci
-            displayName: 'Install project dependencies'
-
-          - bash: |
-              set -euxo pipefail
-              npm run test
-            displayName: 'Run lint, unit tests, and integration tests'
-
-  - stage: SecurityTest
-    displayName: 'Security testing'
-    dependsOn: CodeTest
-    condition: succeeded()
-    jobs:
-      - job: SecuritySuite
-        displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
-        container: securitytools
-        steps:
-          - checkout: self
-            fetchDepth: 0
-
-          - bash: |
-              set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              npm ci
-            displayName: 'Install project dependencies once'
-
-          - bash: |
-              set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              gitleaks git . \
-                --redact \
-                --report-format sarif \
-                --report-path "$(Build.ArtifactStagingDirectory)/gitleaks.sarif"
-            displayName: 'Secret scanning with Gitleaks'
-
-          - bash: |
-              set -euxo pipefail
-              mkdir -p "$(Build.ArtifactStagingDirectory)"
-              semgrep scan \
-                --config p/javascript \
-                --config p/nodejs \
-                --config p/owasp-top-ten \
-                --sarif \
-                --output "$(Build.ArtifactStagingDirectory)/semgrep.sarif" \
-                --error .
-            displayName: 'SAST with Semgrep'
-
-          - bash: |
-              set -euxo pipefail
-              npm audit --json > "$(Build.ArtifactStagingDirectory)/npm-audit.json" || true
-              npm audit --audit-level=critical
-            displayName: 'SCA with npm audit'
-
-          - bash: |
-              set -euxo pipefail
-              nohup bash -c "$(START_COMMAND)" > "$(Build.ArtifactStagingDirectory)/app-security.log" 2>&1 &
-              echo $! > "$(Build.ArtifactStagingDirectory)/app-security.pid"
-
-              for i in $(seq 1 60); do
-                if curl -fsS "$(APP_URL)" >/dev/null 2>&1; then
-                  echo "Application is reachable at $(APP_URL)"
-                  exit 0
-                fi
-                sleep 5
-              done
-
-              echo "Application did not become ready in time"
-              tail -n 200 "$(Build.ArtifactStagingDirectory)/app-security.log" || true
-              exit 1
-            displayName: 'Start app locally once and wait until ready'
-
-          - bash: |
-              set -euxo pipefail
-
-              mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
-
-              if [ -f .ci/zap-baseline.conf ]; then
-                CONFIG_ARG="-c .ci/zap-baseline.conf"
-              else
-                CONFIG_ARG="-I"
-              fi
-
-              zap-baseline.py \
-                -t "$(APP_URL)" \
-                -m "$(DAST_MINUTES)" \
-                -J "/zap-report.json" \
-                -r "/zap-report.html" \
-                $CONFIG_ARG
-              
-              cp -r /zap/wrk/. "$(Build.ArtifactStagingDirectory)/zap" 2>/dev/null
-            displayName: 'DAST with OWASP ZAP baseline'
-
-          - bash: |
-              set -euxo pipefail
-              if [ "$(RUN_IAST)" != "true" ]; then
-                echo "RUN_IAST is false. Skipping IAST."
-                exit 0
-              fi
-
-              npm install --no-save @contrast/agent
-              export NODE_OPTIONS="-r @contrast/agent"
-
-              for path in $(echo "$(SMOKE_PATHS)" | tr ',' ' '); do
-                echo "Hitting $(APP_URL)$path"
-                curl -k -i -sS "$(APP_URL)$path" >/dev/null || true
-              done
-
-              sleep 20
-            displayName: 'Optional IAST smoke traffic with Contrast'
-            env:
-              CONTRAST__API__TOKEN: $(CONTRAST__API__TOKEN)
-              CONTRAST__APPLICATION__NAME: $(CONTRAST__APPLICATION__NAME)
-              CONTRAST__SERVER__ENVIRONMENT: $(CONTRAST__SERVER__ENVIRONMENT)
-              CONTRAST__SERVER__NAME: $(CONTRAST__SERVER__NAME)
-
-          - bash: |
-              set +e
-              if [ -f "$(Build.ArtifactStagingDirectory)/app-security.pid" ]; then
-                kill "$(cat "$(Build.ArtifactStagingDirectory)/app-security.pid")" || true
-              fi
-            displayName: 'Stop local app'
-            condition: always()
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish secret scanning report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/gitleaks.sarif'
-              artifact: 'secret-scan-report'
-              publishLocation: 'pipeline'
-            condition: always()
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish SAST report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/semgrep.sarif'
-              artifact: 'sast-report'
-              publishLocation: 'pipeline'
-            condition: always()
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish SCA report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/npm-audit.json'
-              artifact: 'sca-report'
-              publishLocation: 'pipeline'
-            condition: always()
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish DAST report'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/zap'
-              artifact: 'dast-report'
-              publishLocation: 'pipeline'
-            condition: always()
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish local app log'
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/app-security.log'
-              artifact: 'security-app-log'
-              publishLocation: 'pipeline'
-            condition: always()
-
-  # - stage: DeployToSAPBTP
-  #   displayName: 'Deploy to SAP BTP Cloud Foundry'
-  #   dependsOn: SecurityTest
-  #   condition: succeeded()
+  # - stage: CodeTest
+  #   displayName: 'Code quality and automated tests'
   #   jobs:
-  #     - job: BuildAndDeployMTA
-  #       displayName: 'Build MTAR and deploy with CF and MultiApps'
-  #       container: securitytools
+  #     - job: NpmTest
+  #       displayName: 'Install dependencies and run npm test'
   #       steps:
   #         - checkout: self
   #           fetchDepth: 1
 
+  #         - task: NodeTool@0
+  #           displayName: 'Use Node.js $(NODE_VERSION)'
+  #           inputs:
+  #             versionSpec: '$(NODE_VERSION)'
+
   #         - bash: |
   #             set -euxo pipefail
   #             npm ci
-  #             mbt build -p=cf
-  #             ls -lah mta_archives
-  #           displayName: 'Build MTAR with mbt'
+  #           displayName: 'Install project dependencies'
 
   #         - bash: |
   #             set -euxo pipefail
-  #             cf version
-  #             cf plugins
-  #             cf login \
-  #               -a "$(BTP_CF_API)" \
-  #               -u "$(BTP_CF_USERNAME)" \
-  #               -p "$(BTP_CF_PASSWORD)" \
-  #               -o "$(BTP_CF_ORG)" \
-  #               -s "$(BTP_CF_SPACE)"
-  #             cf target
-  #           displayName: 'Login to Cloud Foundry'
+  #             npm run test
+  #           displayName: 'Run lint, unit tests, and integration tests'
+
+  # - stage: SecurityTest
+  #   displayName: 'Security testing'
+  #   dependsOn: CodeTest
+  #   condition: succeeded()
+  #   jobs:
+  #     - job: SecuritySuite
+  #       displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
+  #       container: securitytools
+  #       steps:
+  #         - checkout: self
+  #           fetchDepth: 0
 
   #         - bash: |
   #             set -euxo pipefail
-  #             MTAR_FILE=$(find mta_archives -maxdepth 1 -name '*.mtar' | head -n 1)
-  #             if [ -z "$MTAR_FILE" ]; then
-  #               echo 'No MTAR file produced in mta_archives'
-  #               exit 1
+  #             mkdir -p "$(Build.ArtifactStagingDirectory)"
+  #             npm ci
+  #           displayName: 'Install project dependencies once'
+
+  #         - bash: |
+  #             set -euxo pipefail
+  #             mkdir -p "$(Build.ArtifactStagingDirectory)"
+  #             gitleaks git . \
+  #               --redact \
+  #               --report-format sarif \
+  #               --report-path "$(Build.ArtifactStagingDirectory)/gitleaks.sarif"
+  #           displayName: 'Secret scanning with Gitleaks'
+
+  #         - bash: |
+  #             set -euxo pipefail
+  #             mkdir -p "$(Build.ArtifactStagingDirectory)"
+  #             semgrep scan \
+  #               --config p/javascript \
+  #               --config p/nodejs \
+  #               --config p/owasp-top-ten \
+  #               --sarif \
+  #               --output "$(Build.ArtifactStagingDirectory)/semgrep.sarif" \
+  #               --error .
+  #           displayName: 'SAST with Semgrep'
+
+  #         - bash: |
+  #             set -euxo pipefail
+  #             npm audit --json > "$(Build.ArtifactStagingDirectory)/npm-audit.json" || true
+  #             npm audit --audit-level=critical
+  #           displayName: 'SCA with npm audit'
+
+  #         - bash: |
+  #             set -euxo pipefail
+  #             nohup bash -c "$(START_COMMAND)" > "$(Build.ArtifactStagingDirectory)/app-security.log" 2>&1 &
+  #             echo $! > "$(Build.ArtifactStagingDirectory)/app-security.pid"
+
+  #             for i in $(seq 1 60); do
+  #               if curl -fsS "$(APP_URL)" >/dev/null 2>&1; then
+  #                 echo "Application is reachable at $(APP_URL)"
+  #                 exit 0
+  #               fi
+  #               sleep 5
+  #             done
+
+  #             echo "Application did not become ready in time"
+  #             tail -n 200 "$(Build.ArtifactStagingDirectory)/app-security.log" || true
+  #             exit 1
+  #           displayName: 'Start app locally once and wait until ready'
+
+  #         - bash: |
+  #             set -euxo pipefail
+
+  #             mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
+
+  #             if [ -f .ci/zap-baseline.conf ]; then
+  #               CONFIG_ARG="-c .ci/zap-baseline.conf"
+  #             else
+  #               CONFIG_ARG="-I"
   #             fi
-  #             cf deploy "$MTAR_FILE" -f --version-rule ALL
-  #           displayName: 'Deploy MTAR to SAP BTP Cloud Foundry'
+
+  #             zap-baseline.py \
+  #               -t "$(APP_URL)" \
+  #               -m "$(DAST_MINUTES)" \
+  #               -J "/zap-report.json" \
+  #               -r "/zap-report.html" \
+  #               $CONFIG_ARG
+              
+  #             cp -r /zap/wrk/. "$(Build.ArtifactStagingDirectory)/zap" 2>/dev/null
+  #           displayName: 'DAST with OWASP ZAP baseline'
+
+  #         - bash: |
+  #             set -euxo pipefail
+  #             if [ "$(RUN_IAST)" != "true" ]; then
+  #               echo "RUN_IAST is false. Skipping IAST."
+  #               exit 0
+  #             fi
+
+  #             npm install --no-save @contrast/agent
+  #             export NODE_OPTIONS="-r @contrast/agent"
+
+  #             for path in $(echo "$(SMOKE_PATHS)" | tr ',' ' '); do
+  #               echo "Hitting $(APP_URL)$path"
+  #               curl -k -i -sS "$(APP_URL)$path" >/dev/null || true
+  #             done
+
+  #             sleep 20
+  #           displayName: 'Optional IAST smoke traffic with Contrast'
+  #           env:
+  #             CONTRAST__API__TOKEN: $(CONTRAST__API__TOKEN)
+  #             CONTRAST__APPLICATION__NAME: $(CONTRAST__APPLICATION__NAME)
+  #             CONTRAST__SERVER__ENVIRONMENT: $(CONTRAST__SERVER__ENVIRONMENT)
+  #             CONTRAST__SERVER__NAME: $(CONTRAST__SERVER__NAME)
+
+  #         - bash: |
+  #             set +e
+  #             if [ -f "$(Build.ArtifactStagingDirectory)/app-security.pid" ]; then
+  #               kill "$(cat "$(Build.ArtifactStagingDirectory)/app-security.pid")" || true
+  #             fi
+  #           displayName: 'Stop local app'
+  #           condition: always()
 
   #         - task: PublishPipelineArtifact@1
-  #           displayName: 'Publish MTAR artifact'
+  #           displayName: 'Publish secret scanning report'
   #           inputs:
-  #             targetPath: 'mta_archives'
-  #             artifact: 'mtar'
+  #             targetPath: '$(Build.ArtifactStagingDirectory)/gitleaks.sarif'
+  #             artifact: 'secret-scan-report'
   #             publishLocation: 'pipeline'
   #           condition: always()
+
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish SAST report'
+  #           inputs:
+  #             targetPath: '$(Build.ArtifactStagingDirectory)/semgrep.sarif'
+  #             artifact: 'sast-report'
+  #             publishLocation: 'pipeline'
+  #           condition: always()
+
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish SCA report'
+  #           inputs:
+  #             targetPath: '$(Build.ArtifactStagingDirectory)/npm-audit.json'
+  #             artifact: 'sca-report'
+  #             publishLocation: 'pipeline'
+  #           condition: always()
+
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish DAST report'
+  #           inputs:
+  #             targetPath: '$(Build.ArtifactStagingDirectory)/zap'
+  #             artifact: 'dast-report'
+  #             publishLocation: 'pipeline'
+  #           condition: always()
+
+  #         - task: PublishPipelineArtifact@1
+  #           displayName: 'Publish local app log'
+  #           inputs:
+  #             targetPath: '$(Build.ArtifactStagingDirectory)/app-security.log'
+  #             artifact: 'security-app-log'
+  #             publishLocation: 'pipeline'
+  #           condition: always()
+
+  - stage: DeployToSAPBTP
+    displayName: 'Deploy to SAP BTP Cloud Foundry'
+    # dependsOn: SecurityTest
+    # condition: succeeded()
+    jobs:
+      - job: BuildAndDeployMTA
+        displayName: 'Build MTAR and deploy with CF and MultiApps'
+        steps:
+          - checkout: self
+            fetchDepth: 1
+          
+          # Install MBT
+          - bash: |
+              set -euxo pipefail
+              npm install -g mbt
+              mbt --version
+            displayName: 'Install MBT'
+
+          # Install Cloud Foundry CLI
+          - bash: |
+              set -euxo pipefail
+              wget -q -O cf8.deb \
+                https://packages.cloudfoundry.org/stable?release=debian64&version=v8
+              sudo dpkg -i cf8.deb
+              cf version
+            displayName: 'Install Cloud Foundry CLI'
+
+          # Install MultiApps plugin
+          - bash: |
+              set -euxo pipefail
+              cf install-plugin -f multiapps
+              cf plugins
+            displayName: 'Install MultiApps plugin'
+
+           # Build MTAR
+          - bash: |
+              set -euxo pipefail
+              npm ci
+              mbt build -p=cf
+              ls -lah mta_archives
+            displayName: 'Build MTAR'
+
+          - bash: |
+              set -euxo pipefail
+              cf login \
+                -a "$(BTP_CF_API)" \
+                -u "$(BTP_CF_USERNAME)" \
+                -p "$(BTP_CF_PASSWORD)" \
+                -o "$(BTP_CF_ORG)" \
+                -s "$(BTP_CF_SPACE)"
+              cf target
+            displayName: 'Login to Cloud Foundry'
+
+          - bash: |
+              set -euxo pipefail
+              MTAR_FILE=$(find mta_archives -maxdepth 1 -name '*.mtar' | head -n 1)
+              if [ -z "$MTAR_FILE" ]; then
+                echo 'No MTAR file produced in mta_archives'
+                exit 1
+              fi
+              cf deploy "$MTAR_FILE" -f --version-rule ALL
+            displayName: 'Deploy MTAR to SAP BTP Cloud Foundry'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish MTAR artifact'
+            inputs:
+              targetPath: 'mta_archives'
+              artifact: 'mtar'
+              publishLocation: 'pipeline'
+            condition: always()
