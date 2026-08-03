@@ -7,7 +7,7 @@ pool:
 resources:
   containers:
     - container: securitytools
-      image: namnamvt3/security-pipeline:1.0
+      image: namnamvt3/security-pipeline:2.0
 
 variables:
   - group: sap-btp-secrets
@@ -42,7 +42,6 @@ stages:
 
   #         - bash: |
   #             set -euxo pipefail
-  #             npm config set cache $(Pipeline.Workspace)/.npm
   #             npm ci
   #           displayName: 'Install project dependencies'
 
@@ -66,7 +65,6 @@ stages:
           - bash: |
               set -euxo pipefail
               mkdir -p "$(Build.ArtifactStagingDirectory)"
-              npm config set cache $(Pipeline.Workspace)/.npm
               npm ci
             displayName: 'Install project dependencies once'
 
