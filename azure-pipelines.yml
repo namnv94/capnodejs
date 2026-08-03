@@ -117,7 +117,6 @@ stages:
               set -euxo pipefail
 
               mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
-              mkdir -p "/zap/wrk/reports"
 
               if [ -f .ci/zap-baseline.conf ]; then
                 CONFIG_ARG="-c .ci/zap-baseline.conf"
@@ -128,11 +127,11 @@ stages:
               zap-baseline.py \
                 -t "$(APP_URL)" \
                 -m "$(DAST_MINUTES)" \
-                -J "/reports/zap-report.json" \
-                -r "/reports/zap-report.html" \
+                -J "/zap-report.json" \
+                -r "/zap-report.html" \
                 $CONFIG_ARG
               
-              cp "/zap/wrk/reports/*" "$(Build.ArtifactStagingDirectory)/zap"
+              cp "/zap/wrk/*" "$(Build.ArtifactStagingDirectory)/zap"
             displayName: 'DAST with OWASP ZAP baseline'
 
           # - bash: |
