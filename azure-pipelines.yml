@@ -55,12 +55,12 @@ stages:
     # dependsOn: CodeTest
     # condition: succeeded()
     jobs:
-      # - job: SecuritySuite
-      #   displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
-      #   container: securitytools
-      #   steps:
-      #     - checkout: self
-      #       fetchDepth: 0
+      - job: SecuritySuite
+        displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
+        container: securitytools
+        steps:
+          - checkout: self
+            fetchDepth: 0
 
       #     - bash: |
       #         set -euxo pipefail
