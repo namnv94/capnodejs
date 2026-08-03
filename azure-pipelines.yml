@@ -117,7 +117,7 @@ stages:
               set -euxo pipefail
 
               mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
-              mkdir -p "/zap/wrk"
+              mkdir -p "/zap/wrk/reports"
 
               if [ -f .ci/zap-baseline.conf ]; then
                 CONFIG_ARG="-c .ci/zap-baseline.conf"
