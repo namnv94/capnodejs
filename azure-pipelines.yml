@@ -26,34 +26,34 @@ variables:
     value: 'true'
 
 stages:
-  # - stage: CodeTest
-  #   displayName: 'Code quality and automated tests'
-  #   jobs:
-  #     - job: NpmTest
-  #       displayName: 'Install dependencies and run npm test'
-  #       steps:
-  #         - checkout: self
-  #           fetchDepth: 1
+  - stage: CodeTest
+    displayName: 'Code quality and automated tests'
+    jobs:
+      - job: NpmTest
+        displayName: 'Install dependencies and run npm test'
+        steps:
+          - checkout: self
+            fetchDepth: 1
 
-  #         - task: NodeTool@0
-  #           displayName: 'Use Node.js $(NODE_VERSION)'
-  #           inputs:
-  #             versionSpec: '$(NODE_VERSION)'
+          - task: NodeTool@0
+            displayName: 'Use Node.js $(NODE_VERSION)'
+            inputs:
+              versionSpec: '$(NODE_VERSION)'
 
-  #         - bash: |
-  #             set -euxo pipefail
-  #             npm ci
-  #           displayName: 'Install project dependencies'
+          - bash: |
+              set -euxo pipefail
+              npm ci
+            displayName: 'Install project dependencies'
 
-  #         - bash: |
-  #             set -euxo pipefail
-  #             npm run test
-  #           displayName: 'Run lint, unit tests, and integration tests'
+          - bash: |
+              set -euxo pipefail
+              npm run test
+            displayName: 'Run lint, unit tests, and integration tests'
 
   - stage: SecurityTest
     displayName: 'Security testing'
-    # dependsOn: CodeTest
-    # condition: succeeded()
+    dependsOn: CodeTest
+    condition: succeeded()
     jobs:
       - job: SecuritySuite
         displayName: 'Secret scanning, SAST, SCA, DAST, and optional IAST'
@@ -68,32 +68,32 @@ stages:
               npm ci
             displayName: 'Install project dependencies once'
 
-      #     - bash: |
-      #         set -euxo pipefail
-      #         mkdir -p "$(Build.ArtifactStagingDirectory)"
-      #         gitleaks git . \
-      #           --redact \
-      #           --report-format sarif \
-      #           --report-path "$(Build.ArtifactStagingDirectory)/gitleaks.sarif"
-      #       displayName: 'Secret scanning with Gitleaks'
+          - bash: |
+              set -euxo pipefail
+              mkdir -p "$(Build.ArtifactStagingDirectory)"
+              gitleaks git . \
+                --redact \
+                --report-format sarif \
+                --report-path "$(Build.ArtifactStagingDirectory)/gitleaks.sarif"
+            displayName: 'Secret scanning with Gitleaks'
 
-      #     - bash: |
-      #         set -euxo pipefail
-      #         mkdir -p "$(Build.ArtifactStagingDirectory)"
-      #         semgrep scan \
-      #           --config p/javascript \
-      #           --config p/nodejs \
-      #           --config p/owasp-top-ten \
-      #           --sarif \
-      #           --output "$(Build.ArtifactStagingDirectory)/semgrep.sarif" \
-      #           --error .
-      #       displayName: 'SAST with Semgrep'
+          - bash: |
+              set -euxo pipefail
+              mkdir -p "$(Build.ArtifactStagingDirectory)"
+              semgrep scan \
+                --config p/javascript \
+                --config p/nodejs \
+                --config p/owasp-top-ten \
+                --sarif \
+                --output "$(Build.ArtifactStagingDirectory)/semgrep.sarif" \
+                --error .
+            displayName: 'SAST with Semgrep'
 
-      #     - bash: |
-      #         set -euxo pipefail
-      #         npm audit --json > "$(Build.ArtifactStagingDirectory)/npm-audit.json" || true
-      #         npm audit --audit-level=critical
-      #       displayName: 'SCA with npm audit'
+          - bash: |
+              set -euxo pipefail
+              npm audit --json > "$(Build.ArtifactStagingDirectory)/npm-audit.json" || true
+              npm audit --audit-level=critical
+            displayName: 'SCA with npm audit'
 
           - bash: |
               set -euxo pipefail
@@ -113,26 +113,26 @@ stages:
               exit 1
             displayName: 'Start app locally once and wait until ready'
 
-          # - bash: |
-          #     set -euxo pipefail
+          - bash: |
+              set -euxo pipefail
 
-          #     mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
+              mkdir -p "$(Build.ArtifactStagingDirectory)/zap"
 
-          #     if [ -f .ci/zap-baseline.conf ]; then
-          #       CONFIG_ARG="-c .ci/zap-baseline.conf"
-          #     else
-          #       CONFIG_ARG="-I"
-          #     fi
+              if [ -f .ci/zap-baseline.conf ]; then
+                CONFIG_ARG="-c .ci/zap-baseline.conf"
+              else
+                CONFIG_ARG="-I"
+              fi
 
-          #     zap-baseline.py \
-          #       -t "$(APP_URL)" \
-          #       -m "$(DAST_MINUTES)" \
-          #       -J "/zap-report.json" \
-          #       -r "/zap-report.html" \
-          #       $CONFIG_ARG
+              zap-baseline.py \
+                -t "$(APP_URL)" \
+                -m "$(DAST_MINUTES)" \
+                -J "/zap-report.json" \
+                -r "/zap-report.html" \
+                $CONFIG_ARG
               
-          #     cp -r /zap/wrk/. "$(Build.ArtifactStagingDirectory)/zap" 2>/dev/null
-          #   displayName: 'DAST with OWASP ZAP baseline'
+              cp -r /zap/wrk/. "$(Build.ArtifactStagingDirectory)/zap" 2>/dev/null
+            displayName: 'DAST with OWASP ZAP baseline'
 
           - bash: |
               set -euxo pipefail
@@ -165,37 +165,37 @@ stages:
             displayName: 'Stop local app'
             condition: always()
 
-          # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish secret scanning report'
-          #   inputs:
-          #     targetPath: '$(Build.ArtifactStagingDirectory)/gitleaks.sarif'
-          #     artifact: 'secret-scan-report'
-          #     publishLocation: 'pipeline'
-          #   condition: always()
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish secret scanning report'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/gitleaks.sarif'
+              artifact: 'secret-scan-report'
+              publishLocation: 'pipeline'
+            condition: always()
 
-          # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish SAST report'
-          #   inputs:
-          #     targetPath: '$(Build.ArtifactStagingDirectory)/semgrep.sarif'
-          #     artifact: 'sast-report'
-          #     publishLocation: 'pipeline'
-          #   condition: always()
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish SAST report'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/semgrep.sarif'
+              artifact: 'sast-report'
+              publishLocation: 'pipeline'
+            condition: always()
 
-          # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish SCA report'
-          #   inputs:
-          #     targetPath: '$(Build.ArtifactStagingDirectory)/npm-audit.json'
-          #     artifact: 'sca-report'
-          #     publishLocation: 'pipeline'
-          #   condition: always()
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish SCA report'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/npm-audit.json'
+              artifact: 'sca-report'
+              publishLocation: 'pipeline'
+            condition: always()
 
-          # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish DAST report'
-          #   inputs:
-          #     targetPath: '$(Build.ArtifactStagingDirectory)/zap'
-          #     artifact: 'dast-report'
-          #     publishLocation: 'pipeline'
-          #   condition: always()
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish DAST report'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/zap'
+              artifact: 'dast-report'
+              publishLocation: 'pipeline'
+            condition: always()
 
           - task: PublishPipelineArtifact@1
             displayName: 'Publish local app log'
