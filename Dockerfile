@@ -42,7 +42,3 @@ RUN node --version \
     && java -version \
     && zap.sh -version \
     && zap-baseline.py -h > /dev/null
-
-# Return to the default non-root ZAP user
-USER zap
-WORKDIR /zap/wrk

@@ -42,6 +42,7 @@ stages:
 
   #         - bash: |
   #             set -euxo pipefail
+  #             npm config set cache $(Pipeline.Workspace)/.npm
   #             npm ci
   #           displayName: 'Install project dependencies'
 
@@ -62,11 +63,12 @@ stages:
           - checkout: self
             fetchDepth: 0
 
-      #     - bash: |
-      #         set -euxo pipefail
-      #         mkdir -p "$(Build.ArtifactStagingDirectory)"
-      #         npm ci
-      #       displayName: 'Install project dependencies once'
+          - bash: |
+              set -euxo pipefail
+              mkdir -p "$(Build.ArtifactStagingDirectory)"
+              npm config set cache $(Pipeline.Workspace)/.npm
+              npm ci
+            displayName: 'Install project dependencies once'
 
       #     - bash: |
       #         set -euxo pipefail
