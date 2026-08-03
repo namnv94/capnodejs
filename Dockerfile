@@ -45,3 +45,4 @@ RUN node --version \
 
 # Fix permissions for npm cache and zap home
 RUN chown -R 1001:1001 /home/zap
+RUN mkdir -p /zap/wrk && chown -R 1001:1001 /zap/wrk

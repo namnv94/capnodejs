@@ -128,11 +128,11 @@ stages:
               zap-baseline.py \
                 -t "$(APP_URL)" \
                 -m "$(DAST_MINUTES)" \
-                -J "/zap/wrk/zap-report.json" \
-                -r "/zap/wrk/zap-report.html" \
+                -J "/reports/zap-report.json" \
+                -r "/reports/zap-report.html" \
                 $CONFIG_ARG
               
-              cp "/zap/wrk/*" "$(Build.ArtifactStagingDirectory)/zap"
+              cp "/zap/wrk/reports/*" "$(Build.ArtifactStagingDirectory)/zap"
             displayName: 'DAST with OWASP ZAP baseline'
 
           # - bash: |
