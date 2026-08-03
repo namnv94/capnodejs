@@ -131,7 +131,7 @@ stages:
                 -r "/zap-report.html" \
                 $CONFIG_ARG
               
-              cp "/zap/wrk/*" "$(Build.ArtifactStagingDirectory)/zap"
+              cp "/zap/wrk/*" "$(Build.ArtifactStagingDirectory)/zap" > /dev/null
             displayName: 'DAST with OWASP ZAP baseline'
 
           # - bash: |
